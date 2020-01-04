@@ -42,6 +42,17 @@ while read p; do
   sed -i "/^$p\b/Id" /pg/logs/.temp_list
 done </pg/logs/.transfer_list
 
+# Filter the list of files using Python
+python3 - << 'EOF'
+with open("/pg/logs/.temp_list", "r") as f:
+        lines = f.readlines()
+lines = [l.strip() for l in lines]
+filtered = [l for l in lines if list(filter(l.endswith, ['partial~','_HIDDEN~'])) == []]
+filtered = [l for l in filtered if list(filter(l.startswith, ['.fuse_hidden','.unionfs'])) == []]
+with open("/pg/logs/.temp_list", "w") as f:
+        f.write("\n".join(filtered))
+EOF
+
 head -n +1 /pg/logs/.temp_list >> /pg/logs/.transfer_list
 uploadfile=$(head -n +1 /pg/logs/.temp_list)
 

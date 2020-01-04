@@ -67,13 +67,15 @@ chmod 775 "$uploadfile"
   finalcount=$((totalchar + 3))
 
   echo "Preparing to Upload: $uploadfile" >> /pg/logs/transfer.log
-  truepath=$(echo $uploadfile | cut -d'/' -f${finalcount}-)
+
+  # Get just the directory name as rclone expects a destination path (not a file)
+  truepath="$(dirname /$(echo $uploadfile | cut -d'/' -f${finalcount}-))"
 
 if [[ "$var4" == "gdrive" ]]; then
   echo "Started Upload - $var3: $uploadfile" >> /pg/logs/transfer.log
   udrive=$(cat /pg/rclone/deployed.version)
 
-    rclone move "$uploadfile" "$udrive:/$truepath" \
+    rclone move "$uploadfile" "$udrive:$truepath" \
     --config /pg/rclone/blitz.conf \
     --log-file=/pg/logs/transfer.log \
     --log-level INFO --stats 5s --stats-file-name-length 0 \
@@ -92,7 +94,7 @@ else
   encryptbit=""
   if [[ "$uread" == "sc" ]]; then encryptbit="C"; fi
 
-    rclone move "$uploadfile" "${readykey}${encryptbit}:/$truepath" \
+    rclone move "$uploadfile" "${readykey}${encryptbit}:$truepath" \
     --config /pg/rclone/blitz.conf \
     --log-file=/pg/logs/pgblitz.log \
     --log-level INFO --stats 5s --stats-file-name-length 0 \
